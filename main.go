@@ -3,44 +3,51 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"math/rand"
 	"net/http"
 	"sync"
 )
 
 // Task item
 type Task struct {
-	ID          int    `json:"id"`
+	ID          string `json:"id"`
 	Description string `json:"description"`
 	Completed   bool   `json:"completed"`
 }
 
-var tasks = make(map[string]Task)
-var nextID = 1
-var lock sync.Mutex
+var (
+	tasks = map[string]Task{
+		"one":   {ID: "one", Description: "First task", Completed: true},
+		"two":   {ID: "two", Description: "Second task", Completed: true},
+		"three": {ID: "three", Description: "Third task", Completed: false},
+		"four":  {ID: "four", Description: "Fourth task", Completed: true},
+	}
+
+	lock sync.RWMutex
+)
 
 func main() {
-	tasks["one"] = Task{ID: 1, Description: "The first task", Completed: false}
-
-	log.Printf("Tasks init: %#v", tasks)
-
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /task/{id}", getTask)
-	mux.HandleFunc("POST /task/create", createTask)
-	mux.HandleFunc("DELETE /task/del/{id}", delTask)
-
+	mux.HandleFunc("/tasks/", getTasks)
+	mux.HandleFunc("GET /tasks/{id}/", getTask)
+	mux.HandleFunc("POST /tasks/create/", postTask)
 	fmt.Println("Starting server on port 8080")
 	http.ListenAndServe(":8080", mux)
+}
+
+func getTasks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(tasks); err != nil {
+		http.Error(w, "Error encountered", http.StatusInternalServerError)
+	}
 }
 
 func getTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 
-	log.Printf("Received {id} %s", idStr)
-
-	lock.Lock()
+	lock.RLock()
 	task, ok := tasks[idStr]
-	lock.Unlock()
+	lock.RUnlock()
 
 	if !ok {
 		http.NotFound(w, r)
@@ -48,34 +55,27 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		http.Error(w, "Error encountered", http.StatusInternalServerError)
+	}
 }
 
-func createTask(w http.ResponseWriter, r *http.Request) {
+func postTask(w http.ResponseWriter, r *http.Request) {
 	var task Task
-	err := json.NewDecoder(r.Body).Decode(&task)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		http.Error(w, "Invalid task data", http.StatusBadRequest)
 		return
 	}
+	id := fmt.Sprintf("%#X", rand.Intn(1024))
+	task.ID = id
 
 	lock.Lock()
-	task.ID = nextID
-	tasks[fmt.Sprintf("%d", nextID)] = task
-	nextID++
+	tasks[id] = task
 	lock.Unlock()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(task)
-}
-
-func delTask(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-
-	lock.Lock()
-	delete(tasks, idStr)
-	lock.Unlock()
-
-	w.WriteHeader(http.StatusNoContent)
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		http.Error(w, "Error encountered", http.StatusInternalServerError)
+	}
 }

@@ -1,0 +1,31 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+type apiHandler struct{}
+
+func (apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `{"message":"hello", "id":"%s"}`, r.PathValue("id"))
+}
+
+func main() {
+	mux := http.NewServeMux()
+	mux.Handle("/api/{id}/{$}", apiHandler{})
+	mux.HandleFunc("/", defaultHandler)
+
+	fmt.Println("Starting server on port 8080")
+	http.ListenAndServe(":8080", mux)
+}
+
+func defaultHandler(w http.ResponseWriter, req *http.Request) {
+	// The "/" pattern matches everything, so we need to check
+	// that we're at the root here.
+	if req.URL.Path != "/" {
+		http.NotFound(w, req)
+		return
+	}
+	fmt.Fprintf(w, "Welcome to the home page!")
+}
