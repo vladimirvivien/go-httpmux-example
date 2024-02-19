@@ -28,9 +28,9 @@ var (
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/tasks/", getTasks)
-	mux.HandleFunc("GET /tasks/{id}/", getTask)
-	mux.HandleFunc("POST /tasks/create/", postTask)
+	mux.HandleFunc("GET /tasks", getTasks)
+	mux.HandleFunc("GET /tasks/{id}", getTask)
+	mux.HandleFunc("POST /tasks/create", postTask)
 	fmt.Println("Starting server on port 8080")
 	http.ListenAndServe(":8080", mux)
 }
