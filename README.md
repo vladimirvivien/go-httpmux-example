@@ -4,7 +4,7 @@ Simple exmaple to show how to use of new http.ServeMux router in Go v1.22.x.
 
 ## Pre-requisite
 * First, update your Go tools to version v1.22.0 or higher
-* If you are planning using the new route pattern feaure in an existing Go module/project, make sure to change the Go version in your go.mod file  to `go 1.22.0` or whatever future version you are using (to avoid frustration trying to figure out why the feature is not working).
+* If you are planning to use the new enhance routing feaure in an existing Go module/project, **make sure to change the Go version in your go.mod file**  to `go 1.22.0` or whatever future version you are using (to avoid frustration trying to figure out why the feature is not working).
 
 
 ## Enhanced Pattern Matching for Go 1.22 http.ServeMux
