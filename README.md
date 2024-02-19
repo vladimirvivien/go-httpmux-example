@@ -63,7 +63,7 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 ```
 
 ## References
-You can read more about the new `http.ServMux` routing enhancements to get a better picture of its capabilities:
+You can read more about the new `http.ServeMux` routing enhancements to get a better picture of its capabilities:
 
 * Routing enhancements for Go v1.22.0 - [Go blog](https://tip.golang.org/blog/routing-enhancements)
 * net/http.ServMux source code [documentation](https://pkg.go.dev/net/http@master#ServeMux)
